@@ -15,21 +15,21 @@ ASD-GENERATOR> *data*
  (#:constants)
  (#:utils (#:macros (#:massert (#:massert)
 			       (#:definitions))
-		    :rest)
+		    (:rest))
 	  (#:functions))
- (#:arch :rest
-	 (#:server :rest
+ (#:arch (:rest)
+	 (#:server (:rest)
 		   (#:shard)
 		   (#:gem)
 		   (#:jewel)
 		   (#:crown)))
- (#:impl :rest
-	 (#:server :rest
+ (#:impl (:rest)
+	 (#:server (:rest)
 		   (#:shard)
 		   (#:gem)
 		   (#:jewel)
 		   (#:crown)))
- :rest)
+ (:rest))
 
 ASD-GENERATOR> (mapc-directory-tree "/home/phoe/quicklisp/local-projects/lispfurc-new/" "lisp")
 ;; an example file structure
