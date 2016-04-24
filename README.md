@@ -14,9 +14,11 @@ This writes the ASD file for a provided ASDF-loadable system.
 You need to press Enter before anything happens, unless the `im-sure` key is set to non-nil.
 
 ### regen
-Syntax: `(regen)`
+Syntax: `(regen &key im-sure)`
 
 This calls write-asd on the *current* package, as stated in the **`*package*`** variable.
+
+The `im-sure` key works as above.
 
 ## Requirements
 The project must have a `asd-generator-data.asd` file with the structure outlined below.
