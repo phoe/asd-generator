@@ -3,16 +3,20 @@ Automatic generator for ASDF's .asd files
 
 This autoregenerates an .asd file with a customizable :components field, based on the file structure you provide.
 
+This is still in alpha, but I use it to build my own project, if it means anything. `:P`
+
 ## API
 ### write-asd
-Syntax: `(write-asd system-designator)`
+Syntax: `(write-asd system-designator &key im-sure)`
 
 This writes the ASD file for a provided ASDF-loadable system.
+
+You need to press Enter before anything happens, unless the `im-sure` key is set to non-nil.
 
 ### regen
 Syntax: `(regen)`
 
-This calls write-asd on the current package, as stated in the **`*package*`** variable.
+This calls write-asd on the *current* package, as stated in the **`*package*`** variable.
 
 ## Requirements
 The project must have a `asd-generator-data.asd` file with the structure outlined below.
