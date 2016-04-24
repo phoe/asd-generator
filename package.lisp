@@ -7,6 +7,7 @@
   (:import-from #:alexandria
 		"FLATTEN"
 		"ONCE-ONLY")
-  (:export #:write-asd))
+  (:export #:write-asd
+           #:regen))
 
 
