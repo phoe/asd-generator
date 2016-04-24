@@ -107,7 +107,7 @@
 (defun fix (file)
   (replace (format nil "~S" (subst :asdfdefsystem 'asdf:defsystem file)) "ASDF:" :start1 1))
 
-(defun write-asd (system)
+(defun write-asd (system &key (im-sure nil))
   (let* ((file (fix (generate-file system)))
 	 (system-dir (asdf:component-pathname (asdf:find-system system)))
 	 (file-pathname (cl-fad:merge-pathnames-as-file
@@ -122,8 +122,9 @@
       (error "Original ASD file NOT found at ~A.~%" file-pathname)) 
     (format t "### This will write a new file at:~%~A~%" file-pathname)
     (format t "### and store the backup of the original at:~%~A~%" renamed-pathname)
-    (format t "### Hit Enter to continue.~%")
-    (read-line)
+    (unless im-sure
+      (format t "### Hit Enter to continue.~%")
+      (read-line))
     (rename-file file-pathname renamed-pathname)
     (format t "### Renamed file ~%~A~%### to ~%~A.~%" file-pathname renamed-pathname)
     (with-open-file (stream file-pathname :direction :output)
@@ -135,5 +136,5 @@
     (format t "### Wrote file ~%~A.~%### Finished.~%" file-pathname)
     file-pathname))
 
-(defun regen ()
-  (write-asd (intern (package-name *package*) (find-package :keyword))))
+(defun regen (&key (im-sure nil))
+  (write-asd (intern (package-name *package*) (find-package :keyword)) :im-sure im-sure))
