@@ -21,6 +21,9 @@ This calls write-asd on the *current* package, as stated in the **`*package*`** 
 ## Requirements
 The project must have a `asd-generator-data.asd` file with the structure outlined below.
 
+## Known bugs/TODO
+Save *all* of your files in Emacs before running this, as it will pull files like `.#file.lisp` into the `:COMPONENTS` tree along with all others.
+
 ## Example of usage:
 
 ```common-lisp
