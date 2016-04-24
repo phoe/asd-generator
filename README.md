@@ -21,6 +21,8 @@ This calls write-asd on the *current* package, as stated in the **`*package*`** 
 The `im-sure` key works as above.
 
 ## Requirements
+The project must have a valid `.asd` file containing a single `asdf:defsystem` expression.
+
 The project must have a `asd-generator-data.asd` file with the structure outlined below.
 
 ## Known bugs/TODO
