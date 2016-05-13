@@ -1,0 +1,41 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#| <Put a one-line description here>
+exec ros -Q -- $0 "$@"
+|#
+(ql:quickload '(:trivia :asd-generator))
+(defpackage :ros.script.update-asdf.3672149214
+  (:use :cl :asd-generator :trivia))
+(in-package :ros.script.update-asdf.3672149214)
+
+(defvar *im-sure* nil)
+(defvar *system* nil)
+
+(defun infer-system ()
+  (list
+   (first
+    (sort
+     (remove "asd-generator-data"
+             (mapcar #'pathname-name (directory #p"./*.asd"))
+             :test #'string=)
+     #'string<))))
+
+(defun main (&rest argv)
+  (declare (ignorable argv))
+  (match argv
+    ((list* "-C" pathname rest)
+     (let ((*default-pathname-defaults* (pathname pathname)))
+       (apply #'main rest)))
+    ((list* "-y" rest)
+     (let ((*im-sure* t))
+       (apply #'main rest)))
+    ((list* "-s" system rest)
+     (let ((*system* (cons system *system*)))
+       (apply #'main rest)))
+    (nil
+     (dolist (s (or *system* (infer-system)))
+       (write-asd s :im-sure *im-sure*)))
+    (_
+     (format *error-output* "Usage: update-asdf [-y] [-C pathname] [[-s SYSTEM]*]"))))
+
+;;; vim: set ft=lisp lisp:
