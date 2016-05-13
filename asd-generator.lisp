@@ -123,8 +123,6 @@
   (ensure-system system)
   (multiple-value-bind (asdf-definition pathname) (generate-asd system)
     (let ((backup (backup-pathname pathname)))
-      (unless (file-exists-p pathname)
-        (error "Original ASD file NOT found at ~A.~%" pathname))
       (format t "### This will write a new file at:~%~A~%" pathname)
       (format t "### and store the backup of the original at:~%~A~%" backup)
       (unless im-sure
