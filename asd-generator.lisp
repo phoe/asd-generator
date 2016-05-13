@@ -5,6 +5,9 @@
 (in-package #:asd-generator)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defmacro ensure-system (place)
+  `(setf ,place (asdf:find-system ,place)))
+
 (defun get-unix-time ()
   (- (get-universal-time) 2208988800))
 
