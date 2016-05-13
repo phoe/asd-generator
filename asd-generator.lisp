@@ -104,11 +104,8 @@
 	(setf (getf data :components) (generate system-dir generator-data))
 	data))))
 
-(defun fix (file)
-  (replace (format nil "~S" (subst :asdfdefsystem 'asdf:defsystem file)) "ASDF:" :start1 1))
-
 (defun write-asd (system &key (im-sure nil))
-  (let* ((file (fix (generate-file system)))
+  (let* ((file (generate-file system))
 	 (system-dir (asdf:component-pathname (asdf:find-system system)))
 	 (file-pathname (cl-fad:merge-pathnames-as-file
 			 system-dir
