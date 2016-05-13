@@ -11,6 +11,13 @@
 (defun get-unix-time ()
   (- (get-universal-time) 2208988800))
 
+(defun backup-pathname (pathname)
+  (cl-fad:merge-pathnames-as-file
+   (cl-fad:pathname-directory-pathname pathname)
+   (concatenate 'string "."
+                (string-downcase (pathname-name pathname)) "."
+                (format nil "~D" (get-unix-time)) ".backup")))
+
 (defun tree-depth (tree)
   (if (consp tree)
       (1+ (apply #'max (mapcar #'tree-depth tree)))
