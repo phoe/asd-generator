@@ -3,7 +3,7 @@
 #| <Put a one-line description here>
 exec ros -Q -- $0 "$@"
 |#
-(ql:quickload '(:trivia :asd-generator))
+(ql:quickload '(:trivia :asd-generator) :silent t)
 (defpackage :ros.script.update-asdf.3672149214
   (:use :cl :asd-generator :trivia))
 (in-package :ros.script.update-asdf.3672149214)
