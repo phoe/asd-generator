@@ -134,18 +134,10 @@
       (format t "### This will write a new file at:~%~3t~S~%" pathname)
       (format t "### and store the backup of the original at:~%~3t~S~%" backup)
       (unless im-sure
-        (tagbody
-          :start
-          (format t "### Hit Enter, Y or y to continue. Hit N or n to stop.~%")
-          (case (aref (read-line) 0)
-            ((#\return #\newline #\y #\Y)
-             (format t "### Alright.~%"))
-            ((#\N #\n)
-             (format t "### Aborted.~%")
-             (return-from write-asd))
-            (otherwise
-             (format t "### Unrecognized char.~%")
-             (go :start)))))
+        (if (y-or-n-p "### Continue?")
+            (format t "### Alright.~%")
+            (return-from write-asd
+              (format t "### Aborted.~%"))))
       (restart-case
           (progn
             (rename-file pathname backup)
