@@ -86,20 +86,20 @@
   (let ((pathnames (get-relative-pathnames directory)))
     (generate-structure (traverse-stringify (process-recur pathnames generator-data)))))
 
-(defun generate-file (system)
+(defun generate-asd (system)
   (let* ((system-dir (asdf:component-pathname (asdf:find-system system)))
-	 (file-pathname (cl-fad:merge-pathnames-as-file
-			 system-dir
-			 (concatenate 'string (string-downcase (string system)) ".asd")))
-	 (asd-gen-pathname (cl-fad:merge-pathnames-as-file
-			    system-dir
-			    "asd-generator-data.asd"))
+	 (asd-pathname (cl-fad:merge-pathnames-as-file
+                        system-dir
+                        (concatenate 'string (string-downcase (string system)) ".asd")))
+	 (asd-gendata-pathname (cl-fad:merge-pathnames-as-file
+                                system-dir
+                                "asd-generator-data.asd"))
 	 (generator-data
-	   (progn
-	     (assert (file-exists-p asd-gen-pathname) (asd-gen-pathname)
-		     "The file asd-generator-data.asd was not found.")
-	     (with-open-file (stream asd-gen-pathname) (read stream)))))
-    (with-open-file (stream file-pathname)
+          (progn
+            (assert (file-exists-p asd-gendata-pathname) (asd-gendata-pathname)
+                    "The file asd-generator-data.asd was not found.")
+            (with-open-file (stream asd-gendata-pathname) (read stream)))))
+    (with-open-file (stream asd-pathname)
       (let ((data (read stream)))
 	(setf (getf data :components) (generate system-dir generator-data))
 	data))))
