@@ -100,7 +100,15 @@
 
 (defun read-asd (asd-pathname)
   (with-open-file (stream asd-pathname)
-    (read stream)))
+    (do ((form (read stream) (read stream)))
+        ((progn
+           (let ((*print-level* 1)
+                 (*print-length* 1))
+             (format t "Searching defsystem form... : ~S~%" form))
+           (string= 'asdf:defsystem (symbol-name (car form))))
+         (format t "defsystem form found!~%")
+         form)
+      )))
 
 (defun generate-asd (system)
   (ensure-system system)
