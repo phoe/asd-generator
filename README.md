@@ -1,9 +1,9 @@
 # asd-generator
 Automatic generator for ASDF's .asd files
 
-This autoregenerates an .asd file with a customizable :components field, based on the file structure you provide.
+This autoregenerates an .asd file with a customizable `:COMPONENTS` field, based on the file structure you provide.
 
-This is still in alpha, but I use it to build my own project, if it means anything. `:P`
+This is still in alpha, but I use it to build my own projects, if it means anything. `:P`
 
 ## API
 ### write-asd
@@ -18,7 +18,7 @@ Syntax: `(regen &key im-sure)`
 
 This calls write-asd on the *current* package, as stated in the **`*package*`** variable.
 
-The `im-sure` key works as above.
+You need to press Enter before anything happens, unless the `im-sure` key is set to non-nil.
 
 ## Requirements
 The project must have a valid `.asd` file containing a single `asdf:defsystem` expression.
