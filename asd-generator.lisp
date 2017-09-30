@@ -5,6 +5,8 @@
 (in-package #:asd-generator)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; pathnames, utils
+
 (defmacro ensure-system (place)
   `(setf ,place (asdf:find-system ,place)))
 
@@ -17,6 +19,9 @@
    (concatenate 'string "."
                 (string-downcase (pathname-name pathname)) "."
                 (format nil "~D" (get-unix-time)) ".backup")))
+
+(defun symbol->string (symbol)
+  (string-downcase (string symbol)))
 
 (defun tree-depth (tree)
   (if (consp tree)
@@ -41,11 +46,10 @@
 			     (when type (list (pathname-name x))))))
     (mapcar #'filter (mapc-directory-tree directory type))))
 
+;;; traversal
+
 (defun path-to-strings (path)
   (list :file (format nil "~{~A~^/~}" path)))
-
-(defun symbol->string (symbol)
-  (string-downcase (string symbol)))
 
 (defun split (data value n)
   (let (list rest)
