@@ -56,6 +56,21 @@ Save *all* of your files in Emacs before running this, as it will pull files lik
 
 ## Example of usage:
 
+Original asdf file:
+
+```
+(defsystem #:asd-generator-test
+ :description "system for testing asd-generator"
+ :author "Masataro Asai"
+ :depends-on (#:cl-fad
+              #:iterate
+              #:alexandria)
+ :serial t
+ :components ())
+```
+
+asd-generator-data.asd
+
 ```common-lisp
 (("package")        ;single element list (<PATH>) is an abbreviation of (:file <PATH>)
  (:file "constants")
@@ -83,3 +98,48 @@ Save *all* of your files in Emacs before running this, as it will pull files lik
        ("c")))
 ```
 
+Result asdf file:
+
+``` common-lisp
+(defsystem #:asd-generator-test
+ :description "system for testing asd-generator"
+ :author "Masataro Asai"
+ :depends-on (#:cl-fad
+              #:iterate
+              #:alexandria)
+ :serial t
+ :components ((:file "package")
+              (:file "constants")
+              (:file "constants2"
+               :depends-on ("constants"))
+              (:cffi-grovel-file "grovel")
+              (:module "src"
+               :components ((:file "a")
+                            (:file "b")
+                            (:module "sub"
+                             :components ((:file "a")))
+                            (:file "sub/c")
+                            (:file "sub/b")
+                            (:file "sub/a")
+                            (:file "rest")
+                            (:file "non-recursive/sub/c")
+                            (:file "non-recursive/sub/b")
+                            (:file "non-recursive/sub/a")
+                            (:file "c")
+                            (:file "b")
+                            (:file "a")
+                            (:file "rest")
+                            (:module "more-grovels"
+                             :components ((:cffi-grovel-file "a")
+                                          (:cffi-grovel-file "b")
+                                          (:cffi-grovel-file "c")))
+                            (:module "non-recursive"
+                             :components ((:file "a")
+                                          (:file "b")
+                                          (:file "c")))
+                            (:module "sub2"
+                             :components ((:file "a")
+                                          (:file "b")
+                                          (:file "c")))
+                            (:file "c")))))
+```
