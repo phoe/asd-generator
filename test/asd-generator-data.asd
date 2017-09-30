@@ -15,7 +15,7 @@
        ;; This means that the expansion is affected by the components not just
        ;; before, but also after (:rest).  Thus the files "a", "b", "sub/a", "c",
        ;; "rest", all files below "more-grovels", all files below "non-recursive",
-       ;; all files below "sub2" and "c" will be excluded.
+       ;; all files below "sub2" excluded.
        ;; 
        ;; This could be somewhat similar to the behavior of
        ;; (call-next-method).
