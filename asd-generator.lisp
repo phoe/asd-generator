@@ -8,6 +8,7 @@
 ;;; pathnames, utils
 
 (defmacro ensure-system (place)
+  "Ensure the PLACE is a system"
   `(setf ,place (asdf:find-system ,place)))
 
 (defun get-unix-time ()
@@ -22,6 +23,8 @@
 
 (defun symbol->string (symbol)
   (string-downcase (string symbol)))
+
+;;; directory traversal
 
 (defun tree-depth (tree)
   (if (consp tree)
@@ -46,7 +49,8 @@
 			     (when type (list (pathname-name x))))))
     (mapcar #'filter (mapc-directory-tree directory type))))
 
-;;; traversal
+;;; data
+
 
 (defun path-to-strings (path)
   (list :file (format nil "~{~A~^/~}" path)))
@@ -97,12 +101,16 @@
 	  (generate-structure (cddr list)))))
 
 (defun generate-components (system generator-data)
+  "Generate a form for the :COMPONENT section of an ASDF definition"
   (let ((pathnames (get-relative-pathnames (asdf:component-pathname system))))
     (generate-structure (traverse-stringify (process-recur pathnames generator-data)))))
 
 ;;; main functions
 
 (defun read-asd (asd-pathname)
+  "Read a definition file and find the asdf definition.
+Handle older ASDF files which contain multiple forms.
+The recent ASDF assumes one system per file."
   (with-open-file (stream asd-pathname)
     (do ((form (read stream) (read stream)))
         ((progn

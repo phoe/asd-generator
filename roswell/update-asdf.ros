@@ -13,6 +13,7 @@ exec ros -Q -- $0 "$@"
 (defvar *data* "asd-generator-data.asd")
 
 (defun infer-system ()
+  "Select the first system in the current directory."
   (list
    (first
     (sort
