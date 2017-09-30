@@ -114,12 +114,9 @@
          form)
       )))
 
-(defun generate-asd (system)
+(defun generate-asd (system asd-gendata-pathname)
   (ensure-system system)
   (let* ((asd-pathname (asdf:system-source-file system))
-	 (asd-gendata-pathname (cl-fad:merge-pathnames-as-file
-                                (asdf:component-pathname system)
-                                "asd-generator-data.asd"))
 	 (generator-data
           (progn
             (assert (file-exists-p asd-gendata-pathname) (asd-gendata-pathname)
@@ -131,9 +128,9 @@
               asd-pathname
               (backup-pathname asd-pathname)))))
 
-(defun write-asd (system &key (im-sure nil))
+(defun write-asd (system &key (im-sure nil) (data "asd-generator-data.asd"))
   (ensure-system system)
-  (multiple-value-bind (asdf-definition pathname) (generate-asd system)
+  (multiple-value-bind (asdf-definition pathname) (generate-asd system data)
     (let ((backup (backup-pathname pathname)))
       (format t "### This will write a new file at:~%~3t~S~%" pathname)
       (format t "### and store the backup of the original at:~%~3t~S~%" backup)

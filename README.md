@@ -36,7 +36,7 @@ You need to press Enter before anything happens, unless the `im-sure` key is set
 
 ## Command line API
 
-    update-asdf [-y] [-C pathname] [[-s SYSTEM]*]
+    update-asdf [-y] [-C pathname] [-f data] [[-s SYSTEM]*]
 
 Mostly corresponds to calling `regen` and `write-asd`.
 
@@ -44,6 +44,9 @@ Mostly corresponds to calling `regen` and `write-asd`.
 * -C pathname : specify the repository pathname. Similar to `make -C pathname`
 * -s SYSTEM : Specify which asdf system definition to update.
               This is because the current directory could contain multiple asdf definitions.
+* -f data : Specify the asd-generator-data file relative to the system pathname,
+              or an absolute pathname. Defaulted to `asd-generator-data.asd`.
+              Similar to `Makefile -f makefile.mk` .
 
 ## Known bugs/TODO
 Save *all* of your files in Emacs before running this, as it will pull files like `.#file.lisp` into the `:COMPONENTS` tree along with all others.
