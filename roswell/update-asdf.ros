@@ -10,8 +10,10 @@ exec ros -Q -- $0 "$@"
 
 (defvar *im-sure* nil)
 (defvar *system* nil)
+(defvar *data* "asd-generator-data.asd")
 
 (defun infer-system ()
+  "Select the first system in the current directory."
   (list
    (first
     (sort
@@ -32,9 +34,12 @@ exec ros -Q -- $0 "$@"
     ((list* "-s" system rest)
      (let ((*system* (cons system *system*)))
        (apply #'main rest)))
+    ((list* "-f" data rest)
+     (let ((*data* data))
+       (apply #'main rest)))
     (nil
      (dolist (s (or *system* (infer-system)))
-       (write-asd s :im-sure *im-sure*)))
+       (write-asd s :im-sure *im-sure* :data *data*)))
     (_
      (format *error-output* "Usage: update-asdf [-y] [-C pathname] [[-s SYSTEM]*]"))))
 

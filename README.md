@@ -36,109 +36,124 @@ You need to press Enter before anything happens, unless the `im-sure` key is set
 
 ## Command line API
 
-    update-asdf [-y] [-C pathname] [[-s SYSTEM]*]
+    update-asdf [-y] [-C pathname] [-f data] [[-s SYSTEM]*]
 
 Mostly corresponds to calling `regen` and `write-asd`.
 
-* -y : equivalent to `:im-sure t`.
-* -C pathname : specify the repository pathname. Similar to `make -C pathname`
-* -s SYSTEM : Specify which asdf system definitions to update.
+* -y : Do not confirm; equivalent to `:im-sure t`.
+* -C pathname : Specify the system pathname. Similar to `make -C path`
+* -s SYSTEM : Specify which asdf system definition to update.
+              This is because the current directory could contain multiple asdf definitions.
+              By default, it selects the first system in the dictionary order of the names.
+              Can be specified multiple times, in which case all definitions are updated.
+              Do not include `.asd` in the system name.
+* -f data : Specify the asd-generator-data file relative to the system pathname,
+              or an absolute pathname. Defaulted to `asd-generator-data.asd`.
+              Similar to `Makefile -f makefile.mk` .
 
 ## Known bugs/TODO
 Save *all* of your files in Emacs before running this, as it will pull files like `.#file.lisp` into the `:COMPONENTS` tree along with all others.
 
 ## Example of usage:
 
+Original asdf file:
+
+```
+(defsystem #:asd-generator-test
+ :description "system for testing asd-generator"
+ :author "Masataro Asai"
+ :depends-on (#:cl-fad
+              #:iterate
+              #:alexandria)
+ :serial t
+ :components ())
+```
+
+asd-generator-data.asd
+
 ```common-lisp
-ASD-GENERATOR> *data* 
-;; an example of what should the asd-generator-data.asd contain
-((#:package)
- (#:constants)
- (#:utils (#:macros (#:massert (#:massert)
-                               (#:definitions))
-                    (:rest))
-          (#:functions))
- (#:arch (:rest)
-         (#:server (:rest)
-                   (#:shard)
-                   (#:gem)
-                   (#:jewel)
-                   (#:crown)))
- (#:impl (:rest)
-         (#:server (:rest)
-                   (#:shard)
-                   (#:gem)
-                   (#:jewel)
-                   (#:crown)))
- (:rest))
+(("package")        ;single element list (<PATH>) is an abbreviation of (:file <PATH>)
+ (:file "constants")
+ (:file "constants2" :depends-on ("constants")) ; you have to specify :file when you use other features
+ (:cffi-grovel-file "grovel") ; works well with asdf extensions
+ ;;
+ (:dir :src                             ; abbreviation of :module + :components.
+       ("a")
+       ("b")
+       (:dir "sub" ("a"))
+       
+       (:rest)
+       ;; Traverse the current directory recursively and expands to the list of
+       ;; files that are not included by any other directives.
+       ;; 
+       ;; This means that the expansion is affected by the components not just
+       ;; before, but also after (:rest).  Thus the files "a", "b", "sub/a", "c",
+       ;; "rest", all files below "more-grovels", all files below "non-recursive",
+       ;; all files below "sub2" are excluded.
+       ;; 
+       ;; This could be somewhat similar to the behavior of
+       ;; (call-next-method).
+       
+       ;; (:rest :as :file)    ; You can specify the component type (:file by default).
 
-ASD-GENERATOR> (mapc-directory-tree "/home/phoe/quicklisp/local-projects/lispfurc-new/" "lisp")
-;; an example file structure
-(#P"/home/phoe/quicklisp/local-projects/lispfurc-new/arch/server/connection.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/arch/server/crown/crown.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/arch/server/crown/listener.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/arch/server/gem/gem.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/arch/server/jewel/jewel.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/arch/server/shard/chat.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/arch/server/shard/message.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/arch/server/shard/persona.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/arch/server/shard/shard.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/arch/server/shard/world.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/constants.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/impl/logger.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/impl/server/connection.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/impl/server/crown/crown.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/impl/server/crown/listener.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/impl/server/gem/gem-loop.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/impl/server/gem/gem.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/impl/server/jewel/jewel.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/impl/server/shard/chat.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/impl/server/shard/message.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/impl/server/shard/persona.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/impl/server/shard/shard.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/impl/server/shard/world.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/lispfurc-new.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/package.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/utils/functions/array/array.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/utils/functions/constructors.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/utils/functions/varia.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/utils/macros/logger.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/utils/macros/massert/definitions.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/utils/macros/massert/massert.lisp"
- #P"/home/phoe/quicklisp/local-projects/lispfurc-new/utils/macros/varia.lisp")
+       ("c")
+       
+       ;; A file rest.lisp should be included by (:file "rest")
+       (:file "rest")
+       
+       (:dir "more-grovels"
+             (:rest :as :cffi-grovel-file)) ; Specifying the component type.
+    
+       (:dir "non-recursive"
+             ;; You can disable the recursive traversal.  Note that while the
+             ;; expansion includes only the files immediately below
+             ;; "non-recursive" and does not include the files in the
+             ;; subdirectory "non-recursive/sub", the files below
+             ;; "non-recursive/sub" are also excluded from the above (:rest)
+             ;; directive. In other words, all files below "non-recursive" are
+             ;; treated as if they are already included.
+             (:rest :recursive nil))
+         
+       (:dir "sub2")                  ; directory without subcomponents imply (:rest).
+       ;; (:dir "sub2" (:rest))       ; eqivalent definition
+       ))
+```
 
-ASD-GENERATOR> (generate "/home/phoe/quicklisp/local-projects/lispfurc-new/" *data*)
-;; an internal function that generates the :COMPONENTS part of an .asd file
-((:FILE "package")
- (:FILE "constants")
- (:FILE "utils/macros/massert/massert")
- (:FILE "utils/macros/massert/definitions")
- (:FILE "utils/macros/logger")
- (:FILE "utils/macros/varia")
- (:FILE "utils/functions/array/array")
- (:FILE "utils/functions/constructors")
- (:FILE "utils/functions/varia")
- (:FILE "arch/server/connection")
- (:FILE "arch/server/shard/chat")
- (:FILE "arch/server/shard/message")
- (:FILE "arch/server/shard/persona")
- (:FILE "arch/server/shard/shard")
- (:FILE "arch/server/shard/world")
- (:FILE "arch/server/gem/gem")
- (:FILE "arch/server/jewel/jewel")
- (:FILE "arch/server/crown/crown")
- (:FILE "arch/server/crown/listener")
- (:FILE "impl/logger")
- (:FILE "impl/server/connection")
- (:FILE "impl/server/shard/chat")
- (:FILE "impl/server/shard/message")
- (:FILE "impl/server/shard/persona")
- (:FILE "impl/server/shard/shard")
- (:FILE "impl/server/shard/world")
- (:FILE "impl/server/gem/gem-loop")
- (:FILE "impl/server/gem/gem")
- (:FILE "impl/server/jewel/jewel")
- (:FILE "impl/server/crown/crown")
- (:FILE "impl/server/crown/listener")
- (:FILE "lispfurc-new"))
+Result asdf file:
+
+``` common-lisp
+(defsystem #:asd-generator-test
+ :description "system for testing asd-generator"
+ :author "Masataro Asai"
+ :depends-on (#:cl-fad
+              #:iterate
+              #:alexandria)
+ :serial t
+ :components ((:file "package")
+              (:file "constants")
+              (:file "constants2"
+               :depends-on ("constants"))
+              (:cffi-grovel-file "grovel")
+              (:module "src"
+               :components ((:file "a")
+                            (:file "b")
+                            (:module "sub"
+                             :components ((:file "a")))
+                            (:file "not-specified-anywhere/a")
+                            (:file "not-specified-anywhere/b")
+                            (:file "not-specified-anywhere/c")
+                            (:file "c")
+                            (:file "rest")
+                            (:module "more-grovels"
+                             :components ((:cffi-grovel-file "a")
+                                          (:cffi-grovel-file "b")
+                                          (:cffi-grovel-file "c")))
+                            (:module "non-recursive"
+                             :components ((:file "a")
+                                          (:file "b")
+                                          (:file "c")))
+                            (:module "sub2"
+                             :components ((:file "a")
+                                          (:file "b")
+                                          (:file "c")))))))
 ```

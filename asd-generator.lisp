@@ -5,7 +5,10 @@
 (in-package #:asd-generator)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;; pathnames, utils
+
 (defmacro ensure-system (place)
+  "Ensure the PLACE is a system"
   `(setf ,place (asdf:find-system ,place)))
 
 (defun get-unix-time ()
@@ -18,15 +21,15 @@
                 (string-downcase (pathname-name pathname)) "."
                 (format nil "~D" (get-unix-time)) ".backup")))
 
-(defun tree-depth (tree)
-  (if (consp tree)
-      (1+ (apply #'max (mapcar #'tree-depth tree)))
-      0))
+(defun to-string (symbol)
+  (string-downcase (string symbol)))
 
-(defun all-pathnames (directory &optional type)
+;;; directory traversal
+
+(defun all-pathnames (directory)
   (flatten (iterate (for entry in (cl-fad:list-directory directory))
 	     (when (cl-fad:directory-pathname-p entry)
-	       (collect (all-pathnames entry type)))
+	       (collect (all-pathnames entry)))
 	     (collect entry))))
 
 (defun mapc-directory-tree (directory &optional type)
@@ -41,64 +44,90 @@
 			     (when type (list (pathname-name x))))))
     (mapcar #'filter (mapc-directory-tree directory type))))
 
-(defun path-to-strings (path)
-  (list :file (format nil "~{~A~^/~}" path)))
+;;; data
 
-(defun symbol->string (symbol)
-  (string-downcase (string symbol)))
+(defun generate-components (system data)
+  "Generate a form for the :COMPONENT section of the ASDF definition of SYSTEM, from the given DATA"
+  (expand data (asdf:component-pathname system))) ;absolute
 
-(defun split (data value n)
-  (let (list rest)
-    (iterate (for element in data)
-      (if (string= (nth n element) value)
-	  (push element list)
-	  (push element rest)))
-    (values (nreverse list) (nreverse rest))))
+(defun expand (data dir)                ;dir is an absolute pathname string
+  (let (paths)                          ;paths are also absolute
+    (values (mappend
+             #'funcall
+             ;; Perform a lazy evaluation, so that :rest can correctly capture the already
+             ;; included components
+             (iter (for component in data)
+                   (collecting
+                    (match component
+                      
+                      ((list* :rest keywords)
+                       (lambda ()
+                         ;; (print dir)
+                         ;; (print paths)
+                         ;; (terpri)
+                         (multiple-value-bind (expanded subpaths) (apply #'process-rest-form dir paths keywords)
+                           (appendf paths subpaths)
+                           expanded)))
 
-(defun process (data terms n)
-  (if (consp terms) 
-      (iter (with data = (copy-tree data)) 
-	(with processed-data = nil) 
-	(for term in terms)
-	(cond ((equal term '(:rest))
-	       (push :rest processed-data))
-	      ((consp term)
-	       (multiple-value-bind (list rest)
-		   (split data (symbol->string (car term)) n)
-		 (push list processed-data)
-		 (setf data rest))))
-	(finally
-	 (return (nsubst data :rest (nreverse processed-data)))))
-      data))
+                      ;; should be later than :rest because (:rest) is parsed incorrectly
+                      ((list x)                     ;single element is an abbreviation of (:file x)
+                       (push (merge-pathnames (to-string x) dir) paths)
+                       (constantly `((:file ,(to-string x)))))
+                      
+                      ((list* :dir x rest)
+                       (when (null rest)
+                         (setf rest '((:rest)))) 
+                       (multiple-value-bind (expanded subpaths)
+                           (expand rest (merge-pathnames (make-pathname :directory `(:relative ,(to-string x))) dir))
+                         (appendf paths subpaths)
+                         (constantly `((:module ,(to-string x) :components ,expanded)))))
+                      
+                      ((list* type x options)
+                       (push (merge-pathnames (to-string x) dir) paths)
+                       (constantly `((,type ,(to-string x) ,@options))))
 
-(defun process-recur (pathnames data &optional (n 0))
-  (if data
-      (let ((sequences (process pathnames data n)))
-	(iter (for sequence in sequences)
-	  (for data-piece in data)
-	  (collect (process-recur sequence (cdr data-piece) (1+ n))))) 
-      pathnames))
+                      #+(or)
+                      (_
+                       ;; non-component options, e.g. :serial and t
+                       (constantly `(,component)))))))
+            
+            ;; pass the included paths to the upper level
+            paths)))
 
-(defun traverse-stringify (tree)
-  (cond ((null tree)
-	 nil)
-	((and (consp tree) (stringp (car tree)))
-	 (path-to-strings tree))
-	(t
-	 (mapcan #'traverse-stringify tree))))
-
-(defun generate-structure (list)
-  (when list
-    (cons (list (first list) (second list))
-	  (generate-structure (cddr list)))))
-
-(defun generate-components (system generator-data)
-  (let ((pathnames (get-relative-pathnames (asdf:component-pathname system))))
-    (generate-structure (traverse-stringify (process-recur pathnames generator-data)))))
+(defun process-rest-form (dir paths &key (as :file) (recursive t) (type "lisp"))
+  (flet ((typeless (x) (make-pathname :type nil :defaults x)))
+    (let ((included-paths (set-difference
+                           (mapcar #'typeless
+                                   (remove type
+                                           (if recursive
+                                               (all-pathnames dir)
+                                               (remove-if #'cl-fad:directory-pathname-p
+                                                          (cl-fad:list-directory dir)))
+                                           :test (complement #'equal)
+                                           :key #'pathname-type))
+                           paths
+                           :test #'equal))
+          (excluded-paths (set-difference
+                           (mapcar #'typeless
+                                   (remove type
+                                           (all-pathnames dir)
+                                           :test (complement #'equal)
+                                           :key #'pathname-type))
+                           paths
+                           :test #'equal)))
+      (values
+       (sort (mapcar (lambda (x) `(,as ,(enough-namestring x dir)))
+                     included-paths)
+             #'string<
+             :key #'second)
+       excluded-paths))))
 
 ;;; main functions
 
 (defun read-asd (asd-pathname)
+  "Read a definition file and find the asdf definition.
+Handle older ASDF files which contain multiple forms.
+The recent ASDF assumes one system per file."
   (with-open-file (stream asd-pathname)
     (do ((form (read stream) (read stream)))
         ((progn
@@ -110,26 +139,25 @@
          form)
       )))
 
-(defun generate-asd (system)
+(defun generate-asd (system &optional data)
   (ensure-system system)
+  (unless data
+    (setf data (asdf:system-relative-pathname system "asd-generator-data.asd")))
   (let* ((asd-pathname (asdf:system-source-file system))
-	 (asd-gendata-pathname (cl-fad:merge-pathnames-as-file
-                                (asdf:component-pathname system)
-                                "asd-generator-data.asd"))
 	 (generator-data
           (progn
-            (assert (file-exists-p asd-gendata-pathname) (asd-gendata-pathname)
-                    "The file ~a was not found." asd-gendata-pathname)
-            (with-open-file (stream asd-gendata-pathname) (read stream)))))
+            (assert (file-exists-p data) (data)
+                    "The file ~a was not found." data)
+            (with-open-file (stream data) (read stream)))))
     (let ((data (read-asd asd-pathname)))
       (setf (getf data :components) (generate-components system generator-data))
       (values data
               asd-pathname
               (backup-pathname asd-pathname)))))
 
-(defun write-asd (system &key (im-sure nil))
+(defun write-asd (system &key (im-sure nil) data)
   (ensure-system system)
-  (multiple-value-bind (asdf-definition pathname) (generate-asd system)
+  (multiple-value-bind (asdf-definition pathname) (generate-asd system data)
     (let ((backup (backup-pathname pathname)))
       (format t "### This will write a new file at:~%~3t~S~%" pathname)
       (format t "### and store the backup of the original at:~%~3t~S~%" backup)
@@ -163,7 +191,7 @@
           (rename-file backup pathname)))
       pathname)))
 
-(defun pprint-asd (asdf-definition *standard-output*)
+(defun pprint-asd (asdf-definition &optional (*standard-output* *standard-output*))
   (let ((*print-case* :downcase))
     (pprint-logical-block (*standard-output* asdf-definition :prefix "(" :suffix ")")
       (loop

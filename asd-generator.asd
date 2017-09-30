@@ -6,7 +6,8 @@
   :license "GPLv3"
   :depends-on (#:cl-fad
 	       #:iterate
-	       #:alexandria)
+	       #:alexandria
+               #:trivia)
   :serial t
   :components ((:file "package")
                (:file "asd-generator")))
