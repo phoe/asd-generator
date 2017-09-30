@@ -40,10 +40,13 @@ You need to press Enter before anything happens, unless the `im-sure` key is set
 
 Mostly corresponds to calling `regen` and `write-asd`.
 
-* -y : equivalent to `:im-sure t`.
-* -C pathname : specify the repository pathname. Similar to `make -C pathname`
+* -y : Do not confirm; equivalent to `:im-sure t`.
+* -C pathname : Specify the system pathname. Similar to `make -C path`
 * -s SYSTEM : Specify which asdf system definition to update.
               This is because the current directory could contain multiple asdf definitions.
+              By default, it selects the first system in the dictionary order of the names.
+              Can be specified multiple times, in which case all definitions are updated.
+              Do not include `.asd` in the system name.
 * -f data : Specify the asd-generator-data file relative to the system pathname,
               or an absolute pathname. Defaulted to `asd-generator-data.asd`.
               Similar to `Makefile -f makefile.mk` .
