@@ -42,7 +42,8 @@ Mostly corresponds to calling `regen` and `write-asd`.
 
 * -y : equivalent to `:im-sure t`.
 * -C pathname : specify the repository pathname. Similar to `make -C pathname`
-* -s SYSTEM : Specify which asdf system definitions to update.
+* -s SYSTEM : Specify which asdf system definition to update.
+              This is because the current directory could contain multiple asdf definitions.
 
 ## Known bugs/TODO
 Save *all* of your files in Emacs before running this, as it will pull files like `.#file.lisp` into the `:COMPONENTS` tree along with all others.
