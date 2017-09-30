@@ -95,20 +95,32 @@
             paths)))
 
 (defun process-rest-form (dir paths &key (as :file) (recursive t) (type "lisp"))
-  (let ((paths (set-difference
-                (remove type
-                        (if recursive
-                            (all-pathnames dir)
-                            (remove-if #'cl-fad:directory-pathname-p
-                                       (cl-fad:list-directory dir)))
-                        :test (complement #'equal)
-                        :key #'pathname-type)
-                paths
-                :test #'equal)))
-    (values
-     (mapcar (lambda (x) `(,as ,(enough-namestring (make-pathname :type nil :defaults x) dir)))
-             paths)
-     paths)))
+  (flet ((typeless (x) (make-pathname :type nil :defaults x)))
+    (let ((included-paths (set-difference
+                           (mapcar #'typeless
+                                   (remove type
+                                           (if recursive
+                                               (all-pathnames dir)
+                                               (remove-if #'cl-fad:directory-pathname-p
+                                                          (cl-fad:list-directory dir)))
+                                           :test (complement #'equal)
+                                           :key #'pathname-type))
+                           paths
+                           :test #'equal))
+          (excluded-paths (set-difference
+                           (mapcar #'typeless
+                                   (remove type
+                                           (all-pathnames dir)
+                                           :test (complement #'equal)
+                                           :key #'pathname-type))
+                           paths
+                           :test #'equal)))
+      (values
+       (sort (mapcar (lambda (x) `(,as ,(enough-namestring x dir)))
+                     included-paths)
+             #'string<
+             :key #'second)
+       excluded-paths))))
 
 ;;; main functions
 

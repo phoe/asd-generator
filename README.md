@@ -75,27 +75,48 @@ asd-generator-data.asd
 (("package")        ;single element list (<PATH>) is an abbreviation of (:file <PATH>)
  (:file "constants")
  (:file "constants2" :depends-on ("constants")) ; you have to specify :file when you use other features
- (:cffi-grovel-file "grovel")           ; works well with asdf extensions
+ (:cffi-grovel-file "grovel") ; works well with asdf extensions
  ;;
  (:dir :src                             ; abbreviation of :module + :components.
        ("a")
        ("b")
-       (:dir "sub"
-             ("sub-a"))
-       (:rest)                          ; Descends into subdirectories and
-                                        ; expands to the rest of the files not
-                                        ; already included, as :file components.
-                                        ; Thus sub/sub-a and all files below more-grovels are not included here.
-       ;; (:rest :as :file)             ; You can specify the component type (:file by default).
+       (:dir "sub" ("a"))
+       
+       (:rest)
+       ;; Traverse the current directory recursively and expands to the list of
+       ;; files that are not included by any other directives.
+       ;; 
+       ;; This means that the expansion is affected by the components not just
+       ;; before, but also after (:rest).  Thus the files "a", "b", "sub/a", "c",
+       ;; "rest", all files below "more-grovels", all files below "non-recursive",
+       ;; all files below "sub2" and "c" will be excluded.
+       ;; 
+       ;; This could be somewhat similar to the behavior of
+       ;; (call-next-method).
+       
+       ;; (:rest :as :file)    ; You can specify the component type (:file by default).
+
+       ("c")
+       
+       ;; A file rest.lisp should be included by (:file "rest")
+       (:file "rest")
+       
        (:dir "more-grovels"
              (:rest :as :cffi-grovel-file)) ; Specifying the component type.
     
        (:dir "non-recursive"
-             (:rest :recursive nil))  ; you can disable the recursive includes. 
+             ;; You can disable the recursive traversal.  Note that while the
+             ;; expansion includes only the files immediately below
+             ;; "non-recursive" and does not include the files in the
+             ;; subdirectory "non-recursive/sub", the files below
+             ;; "non-recursive/sub" are also excluded from the above (:rest)
+             ;; directive. In other words, all files below "non-recursive" are
+             ;; treated as if they are already included.
+             (:rest :recursive nil))
          
-       (:dir "sub2")                  ; directory without subcomponents imply :rest
+       (:dir "sub2")                  ; directory without subcomponents imply (:rest).
        ;; (:dir "sub2" (:rest))       ; eqivalent definition
-       ("c")))
+       ))
 ```
 
 Result asdf file:
@@ -118,16 +139,10 @@ Result asdf file:
                             (:file "b")
                             (:module "sub"
                              :components ((:file "a")))
-                            (:file "sub/c")
-                            (:file "sub/b")
-                            (:file "sub/a")
-                            (:file "rest")
-                            (:file "non-recursive/sub/c")
-                            (:file "non-recursive/sub/b")
-                            (:file "non-recursive/sub/a")
+                            (:file "not-specified-anywhere/a")
+                            (:file "not-specified-anywhere/b")
+                            (:file "not-specified-anywhere/c")
                             (:file "c")
-                            (:file "b")
-                            (:file "a")
                             (:file "rest")
                             (:module "more-grovels"
                              :components ((:cffi-grovel-file "a")
@@ -140,6 +155,5 @@ Result asdf file:
                             (:module "sub2"
                              :components ((:file "a")
                                           (:file "b")
-                                          (:file "c")))
-                            (:file "c")))))
+                                          (:file "c")))))))
 ```
