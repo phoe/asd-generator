@@ -32,18 +32,6 @@
 	       (collect (all-pathnames entry)))
 	     (collect entry))))
 
-(defun mapc-directory-tree (directory &optional type)
-  (remove-if-not (lambda (x) (equal (pathname-type x) type))
-		 (all-pathnames directory type)))
-
-(defun get-relative-pathnames (directory &optional (type "lisp"))
-  (assert (cl-fad:pathname-absolute-p (pathname directory))
-	  (directory) "You must provide an absolute pathname.")
-  (flet ((filter (x) (append (nthcdr (list-length (pathname-directory (pathname directory)))
-				     (pathname-directory x))
-			     (when type (list (pathname-name x))))))
-    (mapcar #'filter (mapc-directory-tree directory type))))
-
 ;;; data
 
 (defun generate-components (system data)
