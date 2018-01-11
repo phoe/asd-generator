@@ -1,7 +1,7 @@
 #!/bin/sh
 #|-*- mode:lisp -*-|#
 #| <Put a one-line description here>
-exec ros -Q -- $0 "$@"
+exec ros -L sbcl-bin -m update-asdf -Q -- $0 "$@"
 |#
 (ql:quickload '(:trivia :asd-generator) :silent t)
 (defpackage :ros.script.update-asdf.3672149214
