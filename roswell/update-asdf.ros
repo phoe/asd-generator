@@ -41,6 +41,6 @@ exec ros -L sbcl-bin -m update-asdf -Q -- $0 "$@"
      (dolist (s (or *system* (infer-system)))
        (write-asd s :im-sure *im-sure* :data *data*)))
     (_
-     (format *error-output* "Usage: update-asdf [-y] [-C pathname] [[-s SYSTEM]*] [-f asd-generator-data.asd]"))))
+     (format *error-output* "Usage: update-asdf [-y] [-C pathname] [[-s SYSTEM]*] [-f asd-generator-data.asd]~%"))))
 
 ;;; vim: set ft=lisp lisp:
