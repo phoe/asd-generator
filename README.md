@@ -50,6 +50,7 @@ Mostly corresponds to calling `regen` and `write-asd`.
 * -f data : Specify the asd-generator-data file relative to the system pathname,
               or an absolute pathname. Defaulted to `asd-generator-data.asd`.
               Similar to `Makefile -f makefile.mk` .
+* -r : Call ql:register-local-projects
 
 ## Known bugs/TODO
 Save *all* of your files in Emacs before running this, as it will pull files like `.#file.lisp` into the `:COMPONENTS` tree along with all others.
